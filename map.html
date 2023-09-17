@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TaiwanFungiDiversityCS地圖顯示</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="./js/unpkg.com_papaparse@5.4.1_papaparse.min.js"></script>
+    <style>
+        #map {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+        }
+        #map-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10000;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        var map = L.map('map').setView([24.0330, 121], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var csvURI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRURlF69YAayrI_tXCiiuEuJ5KGo3W8CK6xWIurasTUVxWUb0mQrOoMKFXj2dYb0g/pub?gid=1941775265&single=true&output=csv";
+
+        // Load csv file with jQuery
+        $.get(csvURI, function(csvData) {
+            console.log(csvData);
+            //Parse the CSV Data
+            var data = Papa.parse(csvData).data;
+            console.log(data);
+            //Get column number of 'seq','iNATNumber','collector', 'observed_on', 'created_at', 'species_guess', 'latitude', 'longitude','URI','observation_photos'
+            var seqCol = data[0].indexOf("seq");
+            var iNATNumberCol = data[0].indexOf("iNATNumber");
+            var observed_onCol = data[0].indexOf("observed_on");
+            var created_atCol = data[0].indexOf("created_at");
+            var species_guessCol = data[0].indexOf("species_guess");
+            var latitudeCol = data[0].indexOf("Latitude");
+            var longitudeCol = data[0].indexOf("Longitude");
+            var URICol = data[0].indexOf("URI");
+            var observation_photosCol = data[0].indexOf("observation_photos");
+            var collectorCol = data[0].indexOf("collector");
+            //Showing data on the map as circle
+            for (var i = 1; i < data.length; i++) {
+                console.log(data[i]);
+                var markerColor = data[i][seqCol] !== "" ? 'green' : 'red';
+                var marker = new L.circleMarker([data[i][latitudeCol], data[i][longitudeCol]], {
+                    color: markerColor,
+                    fillColor: markerColor,
+                    fillOpacity: 0.5,
+                    radius: 10
+                }).addTo(map);
+                marker.bindPopup("<b>seq: </b>" + data[i][seqCol] + "<br>" +
+                    "<b>iNATNumber: </b>" + data[i][iNATNumberCol] + "<br>" +
+                    "<b>collector: </b>" + data[i][collectorCol] + "<br>" +
+                    "<b>observed_on: </b>" + data[i][observed_onCol] + "<br>" +
+                    "<b>created_at: </b>" + data[i][created_atCol] + "<br>" +
+                    "<b>species_guess: </b>" + data[i][species_guessCol] + "<br>" +
+                    "<b>latitude: </b>" + data[i][latitudeCol] + "<br>" +
+                    "<b>longitude: </b>" + data[i][longitudeCol] + "<br>" +
+                    "<b>URI: </b><a href='" + data[i][URICol] + "' target='_blank'>" + data[i][URICol] + "</a><br>" +
+                    "<b>observation_photos: <img src='" + data[i][observation_photosCol] + "' width='200px'></b>"
+                );
+            }
+
+        });
+    </script>
+</body>
+</html>
